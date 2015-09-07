@@ -1,15 +1,15 @@
 
+options(jupyter.plot_mimetypes = 'image/png')
 library(proj4)
 library(ggplot2)
-names(options())
 
-recorded_data <- read.csv("recorded_data.csv", stringsAsFactors=FALSE)
+recorded_data <- read.csv("../data/recorded_data.csv", stringsAsFactors=FALSE)
 recorded_data <- recorded_data[recorded_data[,"X_gps_precision"]<5, ]
 dim(recorded_data)
 
 recorded_locs <- project(as.matrix(recorded_data[,c('X_gps_longitude', 'X_gps_latitude')]),'+proj=laea +lat_0=5 +lon_0=20 +ellps=WGS84 +units=m +no_defs')
 
-presampled_locs <- read.csv("../../fieldwork/csv/arusha_testsite_GID100m.csv", stringsAsFactors=FALSE)
+presampled_locs <- read.csv("../data/arusha_testsite_GID100m.csv", stringsAsFactors=FALSE)
 
 laea_presampled_locs <- project(as.matrix(presampled_locs[,c("x","y")]),  '+proj=laea +lat_0=5 +lon_0=20 +ellps=WGS84 +units=m +no_defs')
 GID_100m_record = rep(NA, dim(recorded_locs)[1])
@@ -19,20 +19,18 @@ for(i in 1:dim(recorded_locs)[1]){
         GID_100m_record[i] = presampled_locs[which.min(dist_topresampled),"GID_100m"]          
     }
 }
-table(GID_100m_record)
+table(GID_100m_record[recorded_data[,'depth']=='top'])
 
-
-dist(recorded_locs[GID_100m_record=="E1838-S919-18", ])
-
+dist(recorded_locs[GID_100m_record=="E1838-S919-18"&recorded_data[,'depth']=="top", ])
 
 lesssample_data=recorded_data[GID_100m_record%in%names(table(GID_100m_record))[table(GID_100m_record)<2],]
 
 lesssample_data[lesssample_data$restrict=="no",]
 
-plot(recorded_locs)
-points(recorded_locs[GID_100m_record%in%names(table(GID_100m_record))[table(GID_100m_record)>2],], col=2)
-points(recorded_locs[recorded_data$restrict=="no"&GID_100m_record%in%names(table(GID_100m_record))[table(GID_100m_record)<2],], col=3)
-legend(1838000, -916000, c("location with \nmore than 2 measurements","location with \nless than 2 measurements \nno restriction"), cex=0.9,col=c(2, 3), pch=c(1,1))
+plot(recorded_data[,c('X_gps_longitude', 'X_gps_latitude')], xlab="Longitude", ylab="Latitude")
+points(recorded_data[GID_100m_record%in%names(table(GID_100m_record))[table(GID_100m_record)>2],c('X_gps_longitude', 'X_gps_latitude')], col=2)
+points(recorded_data[recorded_data$restrict=="no"&GID_100m_record%in%names(table(GID_100m_record))[table(GID_100m_record)<2],c('X_gps_longitude', 'X_gps_latitude')], col=3)
+legend(36.542, -3.49, c("location with more than 2 measurements","location with less than 2 measurements no depth restriction"), cex=0.9,col=c(2, 3), pch=c(1,1))
 
 presampled_nonrecorded_GID <- presampled_locs[!presampled_locs[,"GID_100m"]%in%GID_100m_record, "GID_100m"]
 presampled_nonrecorded_GID
@@ -49,21 +47,20 @@ duplicated_ssid_diffsample
 
 recorded_data[recorded_data$ssid==duplicated_ssid_diffsample[1], ]
 
-
 duplicatedSSID_GID <- GID_100m_record[recorded_data[,"ssid"]%in%duplicated_ssid_diffsample]
 unique(duplicatedSSID_GID)
 
 unique(recorded_data[recorded_data[,"ssid"]%in%duplicated_ssid_diffsample, 'today'])
 
 
-plot(recorded_locs[!is.na(GID_100m_record)&!recorded_data[,"ssid"]%in%duplicated_ssid_diffsample,],col=1, xlim=range(recorded_locs[,1]), ylim=range(recorded_locs[,2]), xlab="x", ylab="y")
-points(recorded_locs[is.na(GID_100m_record),],col=4)
-points(recorded_locs[!is.na(GID_100m_record)&recorded_data[,"ssid"]%in%duplicated_ssid_diffsample,], col=2)
-points(laea_presampled_locs[!presampled_locs[,"GID_100m"]%in%GID_100m_record,], col=3, pch=3)
-legend(1838000, -924000,c("recorded, presampled, unique ssid", "presampled but not recored", "recorded but not presampled", "recorded, presampled, non unique ssid"), cex=0.9, col=c(1,3, 4,2), pch=c(1,3,1,1))
+plot(recorded_data[!is.na(GID_100m_record)&!recorded_data[,"ssid"]%in%duplicated_ssid_diffsample,c('X_gps_longitude', 'X_gps_latitude')],col=1, xlim=range(recorded_data[,'X_gps_longitude']), ylim=range(recorded_data[,'X_gps_latitude']), xlab="Longitude", ylab="Latitude")
+points(recorded_data[is.na(GID_100m_record),c('X_gps_longitude', 'X_gps_latitude')],col=4)
+points(recorded_data[!is.na(GID_100m_record)&recorded_data[,"ssid"]%in%duplicated_ssid_diffsample,c('X_gps_longitude', 'X_gps_latitude')], col=2)
+points(presampled_locs[!presampled_locs[,"GID_100m"]%in%GID_100m_record,c("x","y")], col=3, pch=3)
+legend(36.562, -3.482,c("recorded, presampled, unique ssid", "presampled but not recorded", "recorded but not presampled", "recorded, presampled, non unique ssid"), cex=0.9, col=c(1,3, 4,2), pch=c(1,3,1,1))
 
-crop_scout_data <- read.csv("recorded_crop_scout_data.csv", stringsAsFactors=FALSE)
-cob_count_data <- read.csv("recorded_cob_count_data.csv", stringsAsFactors=FALSE)
+crop_scout_data <- read.csv("../data/recorded_crop_scout_data.csv", stringsAsFactors=FALSE)
+cob_count_data <- read.csv("../data/recorded_cob_count_data.csv", stringsAsFactors=FALSE)
 
 laea_crop_scout_locs <- project(as.matrix(crop_scout_data[,c('X_gps_longitude', 'X_gps_latitude')]),'+proj=laea +lat_0=5 +lon_0=20 +ellps=WGS84 +units=m +no_defs')
 laea_cob_counts_locs <- project(as.matrix(cob_count_data[,c('X_gps_longitude', 'X_gps_latitude')]),'+proj=laea +lat_0=5 +lon_0=20 +ellps=WGS84 +units=m +no_defs')
@@ -77,7 +74,7 @@ for(i in 1:dim(laea_crop_scout_locs)[1]){
     }
 }
 
-plot(laea_crop_scout_locs, pch=2, xlim=range(recorded_locs[,1]), ylim=range(recorded_locs[,2]))
-points(recorded_locs, col=2)
-points(laea_cob_counts_locs, col=3)
-legend(1840000, -924000, c("Crop Scout Location", "Soil Recorded Location", "Cob Counts"), col=c(1,2,3), pch=c(2,1,1))
+plot(crop_scout_data[,c('X_gps_longitude', 'X_gps_latitude')], pch=2, xlim=range(recorded_data[,c('X_gps_longitude')]), ylim=range(recorded_data[,c('X_gps_latitude')]), xlab="Longitude", ylab="Latitude")
+points(recorded_data[,c('X_gps_longitude', 'X_gps_latitude')], col=2)
+points(cob_count_data[,c('X_gps_longitude', 'X_gps_latitude')], col=3)
+legend(36.56, -3.485, c("Crop Scout Location", "Soil Recorded Location", "Cob Counts"), col=c(1,2,3), pch=c(2,1,1))

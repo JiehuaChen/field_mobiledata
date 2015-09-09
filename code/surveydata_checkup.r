@@ -1,5 +1,4 @@
 
-options(jupyter.plot_mimetypes = 'image/png')
 library(proj4)
 library(ggplot2)
 
